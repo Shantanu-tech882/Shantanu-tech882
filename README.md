@@ -2,6 +2,13 @@
 
 💻 BCA student specializing in **AI & Deep Learning**  
 🚀 Exploring **AI/ML, Full-Stack Development, Cloud & Mobile Development**
+<div align="center">
+  <img
+    src="./assets/profile-animation.svg"
+    width="100%"
+    alt="Shantanu Shaw animated profile"
+  />
+</div>
 
 ---
 
