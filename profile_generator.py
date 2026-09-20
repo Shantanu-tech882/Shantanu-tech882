@@ -7,18 +7,15 @@ from PIL import Image, ImageOps, ImageEnhance
 PHOTO = Path("assets/profile.jpg")
 OUTPUT = Path("assets/profile-animation.svg")
 
-# ASCII settings
 COLUMNS = 72
 ROWS = 42
 
-# Dark → bright
 ASCII_CHARS = " .:-=+*#%@"
 
 
 def image_to_ascii():
     image = Image.open(PHOTO).convert("RGB")
 
-    # Focus slightly toward the upper part of the photo
     image = ImageOps.fit(
         image,
         (COLUMNS, ROWS),
@@ -69,12 +66,10 @@ def build_svg(ascii_lines):
               stroke="#30363d"
               stroke-width="2"/>
 
-        <!-- Terminal buttons -->
         <circle cx="55" cy="55" r="7" fill="#ff5f56"/>
         <circle cx="80" cy="55" r="7" fill="#ffbd2e"/>
         <circle cx="105" cy="55" r="7" fill="#27c93f"/>
 
-        <!-- Terminal title -->
         <text x="135" y="61"
               fill="#8b949e"
               font-family="monospace"
@@ -82,7 +77,6 @@ def build_svg(ascii_lines):
             shantanu@github: ~/profile
         </text>
 
-        <!-- Terminal prompt -->
         <text x="55" y="105"
               fill="#58a6ff"
               font-family="monospace"
@@ -92,18 +86,15 @@ def build_svg(ascii_lines):
         '''
     ]
 
-    # ASCII portrait
     start_y = 135
     line_height = 10
 
     for i, line in enumerate(ascii_lines):
         safe_line = escape(line)
-
         delay = 0.7 + (i * 0.035)
 
         svg.append(
-            f'''
-            <text x="55"
+            f'''<text x="55"
                   y="{start_y + i * line_height}"
                   fill="#58a6ff"
                   font-family="monospace"
@@ -122,7 +113,6 @@ def build_svg(ascii_lines):
             '''
         )
 
-    # Information panel
     info_x = 720
     info_y = 155
 
@@ -143,7 +133,7 @@ def build_svg(ascii_lines):
         ("$ status", "#58a6ff"),
         ("Building • Learning • Shipping", "#3fb950"),
         ("", "#8b949e"),
-        ("$ echo \"Hello World!\"", "#58a6ff"),
+        ('$ echo "Hello World!"', "#58a6ff"),
         ("Welcome to my GitHub.", "#f0f6fc"),
     ]
 
@@ -152,8 +142,7 @@ def build_svg(ascii_lines):
         delay = 1.2 + i * 0.12
 
         svg.append(
-            f'''
-            <text x="{info_x}"
+            f'''<text x="{info_x}"
                   y="{y}"
                   fill="{color}"
                   font-family="monospace"
@@ -171,10 +160,8 @@ def build_svg(ascii_lines):
             '''
         )
 
-    # Blinking cursor
     svg.append(
-        '''
-        <rect x="55" y="555"
+        '''<rect x="55" y="555"
               width="10"
               height="18"
               fill="#58a6ff">
@@ -184,7 +171,7 @@ def build_svg(ascii_lines):
                 dur="0.8s"
                 repeatCount="indefinite"/>
         </rect>
-        
+        '''
     )
 
     svg.append("</svg>")
