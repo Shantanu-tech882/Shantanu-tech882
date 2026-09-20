@@ -4,7 +4,7 @@ from xml.sax.saxutils import escape
 from PIL import Image, ImageOps, ImageEnhance
 
 
-PHOTO = Path("assets/profile.jpg")
+PHOTO = Path("assets/profile.png")
 OUTPUT = Path("assets/profile-animation.svg")
 
 COLUMNS = 72
@@ -183,7 +183,7 @@ def main():
     if not PHOTO.exists():
         raise FileNotFoundError(
             f"Could not find {PHOTO}. "
-            "Make sure your photo is stored as assets/profile.jpg."
+            "Make sure your photo is stored as assets/profile.png."
         )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
