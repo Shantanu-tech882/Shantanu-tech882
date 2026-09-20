@@ -1,30 +1,56 @@
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from PIL import Image, ImageOps, ImageEnhance
+from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 
 
 PHOTO = Path("assets/profile.png")
 OUTPUT = Path("assets/profile-animation.svg")
 
-COLUMNS = 72
-ROWS = 42
+# Higher resolution = cleaner ASCII portrait
+COLUMNS = 82
+ROWS = 58
 
+# More detailed ASCII characters
 ASCII_CHARS = " .:-=+*#%@"
 
+# ---------------------------------------------------------
+# Convert the face into a clean ASCII portrait
+# ---------------------------------------------------------
 
 def image_to_ascii():
     image = Image.open(PHOTO).convert("RGB")
 
+    # -----------------------------------------------------
+    # IMPORTANT:
+    # This crop focuses on your face/head.
+    # The values are tuned for the uploaded portrait.
+    # -----------------------------------------------------
     image = ImageOps.fit(
         image,
         (COLUMNS, ROWS),
         method=Image.Resampling.LANCZOS,
-        centering=(0.5, 0.34),
+        centering=(0.50, 0.24),
     )
 
+    # Convert to grayscale
     image = ImageOps.grayscale(image)
-    image = ImageEnhance.Contrast(image).enhance(1.45)
+
+    # Improve contrast
+    image = ImageOps.autocontrast(image, cutoff=2)
+    image = ImageEnhance.Contrast(image).enhance(1.35)
+
+    # Sharpen facial details
+    image = ImageEnhance.Sharpness(image).enhance(1.8)
+
+    # Slight smoothing to remove noisy pixels
+    image = image.filter(
+        ImageFilter.UnsharpMask(
+            radius=1,
+            percent=120,
+            threshold=3
+        )
+    )
 
     pixels = image.load()
     lines = []
@@ -34,7 +60,10 @@ def image_to_ascii():
 
         for x in range(COLUMNS):
             brightness = pixels[x, y]
-            index = int(brightness / 256 * len(ASCII_CHARS))
+
+            index = int(
+                brightness / 256 * len(ASCII_CHARS)
+            )
 
             if index >= len(ASCII_CHARS):
                 index = len(ASCII_CHARS) - 1
@@ -46,7 +75,12 @@ def image_to_ascii():
     return lines
 
 
+# ---------------------------------------------------------
+# Build animated terminal SVG
+# ---------------------------------------------------------
+
 def build_svg(ascii_lines):
+
     width = 1200
     height = 620
 
@@ -66,18 +100,23 @@ def build_svg(ascii_lines):
               stroke="#30363d"
               stroke-width="2"/>
 
+        <!-- Terminal buttons -->
         <circle cx="55" cy="55" r="7" fill="#ff5f56"/>
         <circle cx="80" cy="55" r="7" fill="#ffbd2e"/>
         <circle cx="105" cy="55" r="7" fill="#27c93f"/>
 
-        <text x="135" y="61"
+        <!-- Terminal title -->
+        <text x="135"
+              y="61"
               fill="#8b949e"
               font-family="monospace"
               font-size="16">
             shantanu@github: ~/profile
         </text>
 
-        <text x="55" y="105"
+        <!-- Command -->
+        <text x="55"
+              y="105"
               fill="#58a6ff"
               font-family="monospace"
               font-size="18">
@@ -86,32 +125,49 @@ def build_svg(ascii_lines):
         '''
     ]
 
-    start_y = 135
-    line_height = 10
+    # -----------------------------------------------------
+    # ASCII FACE
+    # -----------------------------------------------------
+
+    start_x = 45
+    start_y = 125
+
+    # Smaller font + more rows = better facial detail
+    font_size = 8
+    line_height = 8
 
     for i, line in enumerate(ascii_lines):
+
         safe_line = escape(line)
-        delay = 0.7 + (i * 0.035)
+
+        delay = 0.5 + (i * 0.025)
 
         svg.append(
-            f'''<text x="55"
-                  y="{start_y + i * line_height}"
-                  fill="#58a6ff"
-                  font-family="monospace"
-                  font-size="10"
-                  xml:space="preserve"
-                  opacity="0">
+            f'''<text
+                x="{start_x}"
+                y="{start_y + i * line_height}"
+                fill="#58a6ff"
+                font-family="monospace"
+                font-size="{font_size}"
+                xml:space="preserve"
+                opacity="0">
+
                 {safe_line}
+
                 <animate
                     attributeName="opacity"
                     from="0"
                     to="1"
                     begin="{delay:.2f}s"
-                    dur="0.25s"
+                    dur="0.18s"
                     fill="freeze"/>
             </text>
             '''
         )
+
+    # -----------------------------------------------------
+    # RIGHT INFORMATION PANEL
+    # -----------------------------------------------------
 
     info_x = 720
     info_y = 155
@@ -119,57 +175,77 @@ def build_svg(ascii_lines):
     info_lines = [
         ("$ name", "#58a6ff"),
         ("Shantanu Shaw", "#f0f6fc"),
+
         ("", "#8b949e"),
+
         ("$ role", "#58a6ff"),
         ("Developer", "#f0f6fc"),
+
         ("", "#8b949e"),
+
         ("$ technologies", "#58a6ff"),
         ("Python • C++ • Java", "#8b949e"),
         ("React • Next.js", "#8b949e"),
         ("Node.js • Express", "#8b949e"),
         ("MongoDB • Supabase", "#8b949e"),
         ("AWS • Google Cloud", "#8b949e"),
+
         ("", "#8b949e"),
+
         ("$ status", "#58a6ff"),
         ("Building • Learning • Shipping", "#3fb950"),
+
         ("", "#8b949e"),
+
         ('$ echo "Hello World!"', "#58a6ff"),
         ("Welcome to my GitHub.", "#f0f6fc"),
     ]
 
     for i, (text, color) in enumerate(info_lines):
+
         y = info_y + i * 23
-        delay = 1.2 + i * 0.12
+        delay = 1.0 + i * 0.10
 
         svg.append(
-            f'''<text x="{info_x}"
-                  y="{y}"
-                  fill="{color}"
-                  font-family="monospace"
-                  font-size="18"
-                  opacity="0">
+            f'''<text
+                x="{info_x}"
+                y="{y}"
+                fill="{color}"
+                font-family="monospace"
+                font-size="18"
+                opacity="0">
+
                 {escape(text)}
+
                 <animate
                     attributeName="opacity"
                     from="0"
                     to="1"
                     begin="{delay:.2f}s"
-                    dur="0.35s"
+                    dur="0.30s"
                     fill="freeze"/>
             </text>
             '''
         )
 
+    # -----------------------------------------------------
+    # BLINKING TERMINAL CURSOR
+    # -----------------------------------------------------
+
     svg.append(
-        '''<rect x="55" y="555"
-              width="10"
-              height="18"
-              fill="#58a6ff">
+        '''<rect
+            x="55"
+            y="555"
+            width="10"
+            height="18"
+            fill="#58a6ff">
+
             <animate
                 attributeName="opacity"
                 values="1;0;1"
                 dur="0.8s"
                 repeatCount="indefinite"/>
+
         </rect>
         '''
     )
@@ -179,19 +255,32 @@ def build_svg(ascii_lines):
     return "\n".join(svg)
 
 
+# ---------------------------------------------------------
+# Main
+# ---------------------------------------------------------
+
 def main():
+
     if not PHOTO.exists():
+
         raise FileNotFoundError(
             f"Could not find {PHOTO}. "
             "Make sure your photo is stored as assets/profile.png."
         )
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     ascii_lines = image_to_ascii()
+
     svg = build_svg(ascii_lines)
 
-    OUTPUT.write_text(svg, encoding="utf-8")
+    OUTPUT.write_text(
+        svg,
+        encoding="utf-8"
+    )
 
     print(f"Created: {OUTPUT}")
 
