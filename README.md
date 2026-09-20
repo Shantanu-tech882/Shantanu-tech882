@@ -6,7 +6,7 @@
   <img
     src="./assets/profile-animation.svg"
     width="100%"
-    alt="Shantanu Shaw animated profile"
+    alt="Shantanu Shaw animated terminal profile"
   />
 </div>
 
